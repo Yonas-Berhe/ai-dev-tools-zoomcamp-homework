@@ -1,0 +1,29 @@
+{% extends 'tasks/base.html' %}
+
+{% block title %}Delete Task - To Do App{% endblock %}
+
+{% block content %}
+<h2>Delete Task</h2>
+
+<div style="margin-top: 20px;">
+    <p style="margin-bottom: 20px;">Are you sure you want to delete this task?</p>
+    
+    <div style="background-color: #f8f9fa; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
+        <h3>{{ task.title }}</h3>
+        {% if task.description %}
+        <p style="color: #666; margin-top: 10px;">{{ task.description }}</p>
+        {% endif %}
+        {% if task.due_date %}
+        <p style="color: #e74c3c; margin-top: 10px; font-weight: bold;">
+            📅 Due: {{ task.due_date|date:"M d, Y" }}
+        </p>
+        {% endif %}
+    </div>
+    
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Yes, Delete</button>
+        <a href="{% url 'task_list' %}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+{% endblock %}

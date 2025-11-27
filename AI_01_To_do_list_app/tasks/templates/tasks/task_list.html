@@ -1,0 +1,51 @@
+{% extends 'tasks/base.html' %}
+
+{% block title %}Task List - To Do App{% endblock %}
+
+{% block content %}
+<h1>My To Do List</h1>
+<a href="{% url 'task_create' %}" class="btn">+ Add New Task</a>
+
+<div style="margin-top: 30px;">
+    {% if tasks %}
+        {% for task in tasks %}
+        <div style="border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; border-radius: 4px; {% if task.completed %}background-color: #f0f0f0;{% endif %}">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="flex: 1;">
+                    <h3 style="{% if task.completed %}text-decoration: line-through; color: #999;{% endif %}">
+                        {{ task.title }}
+                    </h3>
+                    {% if task.description %}
+                    <p style="color: #666; margin-top: 10px;">{{ task.description }}</p>
+                    {% endif %}
+                    {% if task.due_date %}
+                    <p style="color: #e74c3c; margin-top: 10px; font-weight: bold;">
+                        📅 Due: {{ task.due_date|date:"M d, Y" }}
+                    </p>
+                    {% endif %}
+                    <small style="color: #999; display: block; margin-top: 10px;">
+                        Created: {{ task.created_at|date:"M d, Y H:i" }}
+                    </small>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <form method="post" action="{% url 'task_toggle' task.pk %}" style="display: inline;">
+                        {% csrf_token %}
+                        {% if task.completed %}
+                            <button type="submit" class="btn btn-secondary">Mark Incomplete</button>
+                        {% else %}
+                            <button type="submit" class="btn btn-success">Mark Complete</button>
+                        {% endif %}
+                    </form>
+                    <a href="{% url 'task_update' task.pk %}" class="btn btn-secondary">Edit</a>
+                    <a href="{% url 'task_delete' task.pk %}" class="btn btn-danger">Delete</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <p style="text-align: center; color: #999; margin-top: 50px;">
+            No tasks yet. Click "Add New Task" to get started!
+        </p>
+    {% endif %}
+</div>
+{% endblock %}
