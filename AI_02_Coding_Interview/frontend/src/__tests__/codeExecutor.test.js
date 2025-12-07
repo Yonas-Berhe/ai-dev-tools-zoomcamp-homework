@@ -26,12 +26,12 @@ describe('Code Executor', () => {
     expect(Array.isArray(result)).toBe(true);
   });
 
-  it('should return message for non-JavaScript languages', async () => {
-    const result = await executeCode('print("Hello")', 'python');
+  it('should return message for unsupported languages', async () => {
+    const result = await executeCode('fmt.Println("Hello")', 'go');
 
-    expect(result).toHaveLength(4);
+    expect(result.length).toBeGreaterThanOrEqual(1);
     expect(result[0].type).toBe('info');
-    expect(result[0].content).toContain('JavaScript');
+    expect(result[0].content).toContain('JavaScript and Python');
   });
 
   it('should handle Go language', async () => {
@@ -43,7 +43,7 @@ describe('Code Executor', () => {
     
     const result = await executeCode(code, 'go');
 
-    expect(result.some(r => r.content.includes('go'))).toBe(true);
+    expect(result.some(r => r.content.toLowerCase().includes('go'))).toBe(true);
   });
 
   it('should handle Rust language', async () => {

@@ -1,6 +1,8 @@
 import { io } from 'socket.io-client';
 
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:3001';
+// In production (same origin), use relative URL. In development, use the backend URL.
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 
+  (import.meta.env.PROD ? window.location.origin : 'http://localhost:3001');
 
 class SocketService {
   constructor() {

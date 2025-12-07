@@ -1,0 +1,16 @@
+# Render Blueprint Configuration
+# Deploy to Render with: https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: coding-interview
+    env: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: free  # or 'starter' for paid plan
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001

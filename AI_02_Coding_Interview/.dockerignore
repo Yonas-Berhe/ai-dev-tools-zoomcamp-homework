@@ -1,0 +1,46 @@
+# Dependencies
+node_modules
+*/node_modules
+
+# Build outputs (we build inside Docker)
+frontend/dist
+backend/dist
+
+# Development files
+.git
+.gitignore
+*.md
+!README.md
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment files (build-time only)
+.env.local
+.env.development
+.env.test
+
+# Test files
+**/__tests__
+**/*.test.js
+**/*.test.jsx
+**/*.spec.js
+**/*.spec.jsx
+coverage
+.nyc_output
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Misc
+.eslintcache
+.cache

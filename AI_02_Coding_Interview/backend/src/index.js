@@ -21,9 +21,12 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const httpServer = createServer(app);
 
-// Configure CORS
+// Determine if we're in production
+const isProduction = process.env.NODE_ENV === 'production';
+
+// Configure CORS (more permissive in production since frontend is served from same origin)
 const corsOptions = {
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: isProduction ? true : (process.env.FRONTEND_URL || 'http://localhost:5173'),
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   credentials: true,
 };
@@ -41,19 +44,25 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openApiSpec));
 // API Routes
 app.use('/api/sessions', sessionsRouter);
 
-// Health check endpoint
+// Health check endpoint (used by Docker health check)
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Root endpoint
-app.get('/', (req, res) => {
-  res.json({
-    name: 'Coding Interview Platform API',
-    version: '1.0.0',
-    documentation: '/api-docs',
+// API info endpoint (only in development, production serves frontend at /)
+if (!isProduction) {
+  app.get('/', (req, res) => {
+    res.json({
+      name: 'Coding Interview Platform API',
+      version: '1.0.0',
+      documentation: '/api-docs',
+    });
   });
-});
+}
 
 // Configure Socket.io
 const io = new Server(httpServer, {
@@ -64,6 +73,26 @@ const io = new Server(httpServer, {
 
 // Setup WebSocket handlers
 setupSocketHandlers(io);
+
+// In production, serve the built frontend BEFORE error handlers
+if (isProduction) {
+  const frontendPath = path.join(__dirname, '../../frontend/dist');
+  
+  // Check if frontend build exists
+  if (fs.existsSync(frontendPath)) {
+    // Serve static files
+    app.use(express.static(frontendPath));
+    
+    // Handle client-side routing - serve index.html for all non-API routes
+    app.get('*', (req, res) => {
+      res.sendFile(path.join(frontendPath, 'index.html'));
+    });
+    
+    console.log('📁 Serving frontend from:', frontendPath);
+  } else {
+    console.warn('⚠️ Frontend build not found at:', frontendPath);
+  }
+}
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -76,10 +105,12 @@ app.use((err, req, res, next) => {
   });
 });
 
-// 404 handler
-app.use((req, res) => {
-  res.status(404).json({ error: { message: 'Not found' } });
-});
+// 404 handler for development (API-only mode)
+if (!isProduction) {
+  app.use((req, res) => {
+    res.status(404).json({ error: { message: 'Not found' } });
+  });
+}
 
 const PORT = process.env.PORT || 3001;
 

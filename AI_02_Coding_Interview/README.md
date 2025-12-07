@@ -6,9 +6,13 @@ A real-time collaborative coding interview platform with live code sharing, synt
 
 - 🔗 **Unique Interview Links**: Generate shareable links for each interview session
 - 👥 **Real-time Collaboration**: Code together with instant synchronization
-- 🎨 **Syntax Highlighting**: Support for multiple programming languages
-- ▶️ **Code Execution**: Run JavaScript code safely in the browser (sandboxed)
+- 🎨 **Syntax Highlighting**: Support for multiple programming languages (Monaco Editor)
+- ▶️ **Browser-Based Code Execution**: 
+  - JavaScript: Web Workers (sandboxed)
+  - Python: Pyodide (WebAssembly) - runs entirely in the browser
 - 📱 **Responsive Design**: Works on desktop and mobile devices
+- 🐳 **Docker Support**: Easy deployment with Docker
+- 🚀 **Render Ready**: One-click deployment to Render
 
 ## Tech Stack
 
@@ -23,28 +27,67 @@ A real-time collaborative coding interview platform with live code sharing, synt
 - Monaco Editor (VS Code's editor)
 - Socket.io client
 - Tailwind CSS
+- Pyodide (Python WASM) for in-browser Python execution
 - Vitest for testing
 
-## Quick Start
+## Deployment
+
+### Deploy to Render (Recommended)
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy)
+
+**Manual Deployment:**
+
+1. Go to [Render Dashboard](https://dashboard.render.com/)
+2. Click **New** → **Web Service**
+3. Connect your GitHub repository
+4. Configure the service:
+   - **Name**: `coding-interview` (or your choice)
+   - **Environment**: `Docker`
+   - **Dockerfile Path**: `./AI_02_Coding_Interview/Dockerfile`
+   - **Docker Context**: `./AI_02_Coding_Interview`
+5. Add Environment Variables:
+   - `NODE_ENV`: `production`
+   - `PORT`: `3001`
+6. Click **Create Web Service**
+
+Your app will be live at `https://your-service-name.onrender.com`
+
+### Docker (Local/Self-hosted)
+
+```bash
+# Build and run with Docker Compose
+docker-compose up --build
+
+# Or build and run manually
+docker build -t coding-interview .
+docker run -p 3001:3001 coding-interview
+```
+
+The application will be available at **http://localhost:3001**
+
+## Quick Start (Local Development)
 
 ### Prerequisites
 
 - Node.js 18+ installed
 - npm or yarn
 
-### Installation & Running
+#### Installation & Running
 
 ```bash
-# Clone and navigate to project
-cd AI_Project_2
+# Install all dependencies
+npm run install:all
 
-# Install all dependencies (backend + frontend)
-cd backend && npm install && cd ../frontend && npm install && cd ..
+# Start both servers concurrently
+npm start
+```
 
-# Start both servers (run in separate terminals)
+Or run in separate terminals:
 
+```bash
 # Terminal 1 - Backend
-cd backend && npm run dev
+cd backend && npm start
 
 # Terminal 2 - Frontend
 cd frontend && npm run dev
@@ -56,6 +99,19 @@ The application will be available at:
 - **API Documentation**: http://localhost:3001/api-docs
 
 ## Commands Reference
+
+### Root Commands (from project root)
+
+```bash
+# Install all dependencies (backend + frontend)
+npm run install:all
+
+# Start both servers concurrently
+npm start
+
+# Run all tests
+npm test
+```
 
 ### Backend Commands
 
