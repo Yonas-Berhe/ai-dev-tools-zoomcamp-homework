@@ -1,0 +1,335 @@
+openapi: 3.0.3
+info:
+  title: Coding Interview Platform API
+  description: |
+    REST API for the online coding interview platform.
+    
+    This API provides endpoints for:
+    - Creating and managing interview sessions
+    - Generating shareable interview links
+    - Managing participants
+    
+    Real-time collaboration is handled via WebSocket (Socket.io).
+  version: 1.0.0
+  contact:
+    name: API Support
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:3001
+    description: Development server
+  - url: https://api.codinginterview.example.com
+    description: Production server
+
+tags:
+  - name: Sessions
+    description: Interview session management
+  - name: Health
+    description: Health check endpoints
+
+paths:
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Health check
+      description: Check if the API server is running
+      operationId: healthCheck
+      responses:
+        '200':
+          description: Server is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+  /api/sessions:
+    post:
+      tags:
+        - Sessions
+      summary: Create a new interview session
+      description: Creates a new interview session and returns a unique link
+      operationId: createSession
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSessionRequest'
+      responses:
+        '201':
+          description: Session created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    get:
+      tags:
+        - Sessions
+      summary: List all active sessions
+      description: Returns a list of all active interview sessions
+      operationId: listSessions
+      responses:
+        '200':
+          description: List of sessions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sessions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Session'
+                  count:
+                    type: integer
+                    description: Total number of active sessions
+
+  /api/sessions/{sessionId}:
+    get:
+      tags:
+        - Sessions
+      summary: Get session details
+      description: Returns details of a specific interview session
+      operationId: getSession
+      parameters:
+        - $ref: '#/components/parameters/SessionId'
+      responses:
+        '200':
+          description: Session details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+        '404':
+          description: Session not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      tags:
+        - Sessions
+      summary: Delete/end a session
+      description: Ends an interview session and disconnects all participants
+      operationId: deleteSession
+      parameters:
+        - $ref: '#/components/parameters/SessionId'
+      responses:
+        '200':
+          description: Session deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Session deleted successfully
+                  sessionId:
+                    type: string
+        '404':
+          description: Session not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/sessions/{sessionId}/participants:
+    get:
+      tags:
+        - Sessions
+      summary: List session participants
+      description: Returns a list of participants in the session
+      operationId: getSessionParticipants
+      parameters:
+        - $ref: '#/components/parameters/SessionId'
+      responses:
+        '200':
+          description: List of participants
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  participants:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Participant'
+                  count:
+                    type: integer
+        '404':
+          description: Session not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/sessions/{sessionId}/code:
+    get:
+      tags:
+        - Sessions
+      summary: Get current code
+      description: Returns the current code content of the session
+      operationId: getSessionCode
+      parameters:
+        - $ref: '#/components/parameters/SessionId'
+      responses:
+        '200':
+          description: Current code content
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    description: Current code in the editor
+                  language:
+                    type: string
+                    description: Programming language
+        '404':
+          description: Session not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  parameters:
+    SessionId:
+      name: sessionId
+      in: path
+      required: true
+      description: Unique identifier for the interview session
+      schema:
+        type: string
+        format: uuid
+        example: 550e8400-e29b-41d4-a716-446655440000
+
+  schemas:
+    CreateSessionRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          description: Optional title for the interview session
+          example: Senior Developer Interview
+          maxLength: 200
+        language:
+          type: string
+          description: Initial programming language
+          enum:
+            - javascript
+            - typescript
+            - python
+            - java
+            - cpp
+            - csharp
+            - go
+            - rust
+          default: javascript
+        createdBy:
+          type: string
+          description: Name of the session creator
+          example: John Interviewer
+
+    Session:
+      type: object
+      required:
+        - id
+        - createdAt
+        - link
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique session identifier
+          example: 550e8400-e29b-41d4-a716-446655440000
+        title:
+          type: string
+          description: Session title
+          example: Senior Developer Interview
+        link:
+          type: string
+          format: uri
+          description: Shareable interview link
+          example: http://localhost:5173/interview/550e8400-e29b-41d4-a716-446655440000
+        language:
+          type: string
+          description: Current programming language
+          example: javascript
+        code:
+          type: string
+          description: Current code content
+        createdBy:
+          type: string
+          description: Name of session creator
+        createdAt:
+          type: string
+          format: date-time
+          description: Session creation timestamp
+        participantCount:
+          type: integer
+          description: Number of active participants
+          example: 2
+
+    Participant:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique participant identifier (socket ID)
+        name:
+          type: string
+          description: Participant display name
+          example: Jane Developer
+        joinedAt:
+          type: string
+          format: date-time
+          description: When the participant joined
+        isActive:
+          type: boolean
+          description: Whether the participant is currently connected
+
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: ok
+        timestamp:
+          type: string
+          format: date-time
+
+    Error:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: object
+          properties:
+            message:
+              type: string
+              description: Error message
+              example: Session not found
+            code:
+              type: string
+              description: Error code
+              example: SESSION_NOT_FOUND
