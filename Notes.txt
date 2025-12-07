@@ -1,0 +1,28 @@
+
+**Prompt:**
+I want to build a platform for conducting online coding interviews. The system should include both a frontend and backend, along with complete OpenAPI specifications.
+
+**Requirements:**
+
+**General Features**
+
+* Generate a unique interview link that can be shared with candidates.
+* Allow all connected participants to collaboratively edit code within a shared code editor.
+* Provide real-time synchronization so that code changes are instantly visible to all users.
+* Support syntax highlighting for multiple programming languages.
+* Execute code safely within the browser (sandboxed execution).
+
+**Frontend**
+
+* Implement using React with Vite (or vanilla JavaScript if preferred).
+* Include a real-time collaborative code editor with syntax highlighting.
+* Connect to the backend using websockets or another suitable real-time protocol.
+
+**Backend**
+
+* Implement using Express.js.
+* Provide APIs (documented with OpenAPI) for session management, link generation, code execution, and collaboration.
+* Support real-time communication for synchronized editing.
+
+Please generate the full project structure, architecture, and code needed to implement this platform.
+follow instruction in the agents.md file and also generate implementation plan
