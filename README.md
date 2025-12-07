@@ -16,12 +16,137 @@ A real-time collaborative coding interview platform with live code sharing, synt
 - Node.js with Express.js
 - Socket.io for WebSocket communication
 - OpenAPI 3.0 specification with Swagger UI
+- Jest for testing
 
 ### Frontend
 - React 18 with Vite
 - Monaco Editor (VS Code's editor)
 - Socket.io client
 - Tailwind CSS
+- Vitest for testing
+
+## Quick Start
+
+### Prerequisites
+
+- Node.js 18+ installed
+- npm or yarn
+
+### Installation & Running
+
+```bash
+# Clone and navigate to project
+cd AI_Project_2
+
+# Install all dependencies (backend + frontend)
+cd backend && npm install && cd ../frontend && npm install && cd ..
+
+# Start both servers (run in separate terminals)
+
+# Terminal 1 - Backend
+cd backend && npm run dev
+
+# Terminal 2 - Frontend
+cd frontend && npm run dev
+```
+
+The application will be available at:
+- **Frontend**: http://localhost:5173
+- **Backend API**: http://localhost:3001
+- **API Documentation**: http://localhost:3001/api-docs
+
+## Commands Reference
+
+### Backend Commands
+
+```bash
+cd backend
+
+# Install dependencies
+npm install
+
+# Start development server (with hot reload)
+npm run dev
+
+# Start production server
+npm start
+
+# Run all tests
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+```
+
+### Frontend Commands
+
+```bash
+cd frontend
+
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Preview production build
+npm run preview
+
+# Run all tests
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Run tests with coverage
+npm run test:coverage
+
+# Lint code
+npm run lint
+```
+
+## Testing
+
+### Running All Tests
+
+```bash
+# Backend tests
+cd backend && npm test
+
+# Frontend tests
+cd frontend && npm test
+```
+
+### Test Coverage
+
+The project includes comprehensive tests:
+
+**Backend Tests (`backend/__tests__/`):**
+- `api.test.js` - REST API integration tests
+- `websocket.test.js` - WebSocket communication tests
+- `sessionManager.test.js` - Session management unit tests
+
+**Frontend Tests (`frontend/src/__tests__/`):**
+- `Home.test.jsx` - Home page component tests
+- `api.test.js` - API service tests
+- `socket.test.js` - Socket service tests
+- `codeExecutor.test.js` - Code execution tests
+
+### Test Examples
+
+```bash
+# Run specific backend test file
+cd backend && npm test -- api.test.js
+
+# Run frontend tests with coverage report
+cd frontend && npm run test:coverage
+
+# Run tests matching a pattern
+cd backend && npm test -- --testNamePattern="create session"
+```
 
 ## Project Structure
 
