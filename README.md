@@ -6,3 +6,4 @@ Repository for AI Dev Tools Zoomcamp assignments.
 
 - [AI_01_To_do_list_app](./AI_01_To_do_list_app) - To-Do List Application
 - [AI_02_Coding_Interview](./AI_02_Coding_Interview) - Real-time Collaborative Coding Interview Platform
+- [AI_03_MCP](./AI_03_MCP) - FastMCP Documentation Search Server
