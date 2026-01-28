@@ -1,0 +1,56 @@
+# Docker Compose for Development
+# Mounts source code for hot-reloading
+
+services:
+  # Backend API Service (Development)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    container_name: micro-loan-api-dev
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+      - JWT_SECRET=dev-secret-key
+      - JWT_EXPIRES_IN=7d
+      - CORS_ORIGIN=http://localhost:5173,http://localhost:8080
+      - DB_PATH=/app/data/microloan.db
+    volumes:
+      # Mount source code for development
+      - ./backend:/app
+      - /app/node_modules
+      # Persist database
+      - micro-loan-data-dev:/app/data
+    restart: unless-stopped
+    networks:
+      - micro-loan-network-dev
+
+  # Frontend Service (Development)
+  frontend:
+    build:
+      context: ./micro-loan-pwa
+      dockerfile: Dockerfile.dev
+    container_name: micro-loan-pwa-dev
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:3001/api
+    volumes:
+      # Mount source code for hot-reloading
+      - ./micro-loan-pwa:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - micro-loan-network-dev
+
+volumes:
+  micro-loan-data-dev:
+    driver: local
+
+networks:
+  micro-loan-network-dev:
+    driver: bridge

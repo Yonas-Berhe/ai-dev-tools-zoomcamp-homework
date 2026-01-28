@@ -1,0 +1,33 @@
+# Ignore node_modules
+node_modules/
+npm-debug.log*
+
+# Ignore build output (we build inside container)
+dist/
+
+# Ignore development files
+.env
+.env.local
+.env.development
+.git
+.gitignore
+
+# Ignore test files
+src/**/*.test.js
+src/**/*.test.jsx
+src/test/
+coverage/
+vitest.config.js
+
+# Ignore IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Keep production env
+!.env.production

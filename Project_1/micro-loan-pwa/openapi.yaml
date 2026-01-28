@@ -1,0 +1,1167 @@
+openapi: 3.0.3
+info:
+  title: Micro-Loan Calculator API
+  description: |
+    Backend API for the Micro-Loan Calculator PWA.
+    
+    Supports:
+    - Loan calculations with validation
+    - Cloud sync for loan history and savings goals
+    - Financial literacy content delivery
+    - User authentication (optional)
+    - Lender database (future)
+    
+    PRD Reference: Sections 3.1-3.4, Phase 3 requirements
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@microloan.app
+
+servers:
+  - url: http://localhost:3001/api
+    description: Development server
+  - url: https://api.microloan.app/api
+    description: Production server
+
+tags:
+  - name: Loans
+    description: Loan calculation and history management
+  - name: Savings
+    description: Savings goals and transactions
+  - name: Lessons
+    description: Financial literacy content
+  - name: Auth
+    description: User authentication (optional)
+  - name: Lenders
+    description: Lender database (Phase 3)
+
+paths:
+  # ==================
+  # LOAN ENDPOINTS
+  # ==================
+  /loans/calculate:
+    post:
+      tags:
+        - Loans
+      summary: Calculate loan details
+      description: |
+        Performs loan calculation with validation.
+        Supports flat, reducing balance, and compound interest types.
+        Returns predatory loan warning if APR > 50%.
+        PRD Reference: Section 3.1
+      operationId: calculateLoan
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoanCalculationRequest'
+            examples:
+              reducing_balance:
+                summary: Reducing balance loan
+                value:
+                  amount: 1000
+                  interestRate: 12
+                  interestType: reducing
+                  termLength: 12
+                  termUnit: months
+                  fees: 50
+                  currency: USD
+              flat_rate:
+                summary: Flat rate loan
+                value:
+                  amount: 5000
+                  interestRate: 15
+                  interestType: flat
+                  termLength: 2
+                  termUnit: years
+                  fees: 0
+                  currency: KES
+      responses:
+        '200':
+          description: Calculation successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoanCalculationResponse'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /loans:
+    get:
+      tags:
+        - Loans
+      summary: Get user's loan history
+      description: Retrieve all saved loan calculations for the authenticated user
+      operationId: getLoans
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: List of loan calculations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoanHistoryResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      tags:
+        - Loans
+      summary: Save a loan calculation
+      description: Save a loan calculation to the user's history (cloud sync)
+      operationId: saveLoan
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SaveLoanRequest'
+      responses:
+        '201':
+          description: Loan saved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoanRecord'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /loans/{id}:
+    get:
+      tags:
+        - Loans
+      summary: Get a specific loan calculation
+      operationId: getLoanById
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Loan details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoanRecord'
+        '404':
+          description: Loan not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      tags:
+        - Loans
+      summary: Delete a loan calculation
+      operationId: deleteLoan
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Loan deleted successfully
+        '404':
+          description: Loan not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # ==================
+  # SAVINGS ENDPOINTS
+  # ==================
+  /savings:
+    get:
+      tags:
+        - Savings
+      summary: Get all savings goals
+      description: Retrieve all savings goals for the authenticated user
+      operationId: getSavingsGoals
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of savings goals
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavingsGoalsResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      tags:
+        - Savings
+      summary: Create a savings goal
+      operationId: createSavingsGoal
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSavingsGoalRequest'
+      responses:
+        '201':
+          description: Savings goal created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavingsGoal'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /savings/{id}:
+    get:
+      tags:
+        - Savings
+      summary: Get a specific savings goal
+      operationId: getSavingsGoalById
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Savings goal details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavingsGoal'
+        '404':
+          description: Goal not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    put:
+      tags:
+        - Savings
+      summary: Update a savings goal
+      operationId: updateSavingsGoal
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSavingsGoalRequest'
+      responses:
+        '200':
+          description: Savings goal updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavingsGoal'
+        '404':
+          description: Goal not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      tags:
+        - Savings
+      summary: Delete a savings goal
+      operationId: deleteSavingsGoal
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Goal deleted successfully
+        '404':
+          description: Goal not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /savings/{id}/transactions:
+    post:
+      tags:
+        - Savings
+      summary: Add a transaction to a savings goal
+      operationId: addTransaction
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddTransactionRequest'
+      responses:
+        '201':
+          description: Transaction added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+        '404':
+          description: Goal not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /savings/export:
+    get:
+      tags:
+        - Savings
+      summary: Export savings data as CSV
+      description: PRD Reference Section 3.2 - CSV export feature
+      operationId: exportSavings
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: CSV file
+          content:
+            text/csv:
+              schema:
+                type: string
+                format: binary
+
+  # ==================
+  # LESSONS ENDPOINTS
+  # ==================
+  /lessons:
+    get:
+      tags:
+        - Lessons
+      summary: Get all financial literacy lessons
+      description: |
+        Retrieve financial literacy lessons.
+        PRD Reference: Section 3.3
+      operationId: getLessons
+      parameters:
+        - name: language
+          in: query
+          schema:
+            type: string
+            default: en
+            enum: [en, es, sw]
+          description: Language code (en=English, es=Spanish, sw=Swahili)
+      responses:
+        '200':
+          description: List of lessons
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LessonsResponse'
+
+  /lessons/{id}:
+    get:
+      tags:
+        - Lessons
+      summary: Get a specific lesson
+      operationId: getLessonById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: language
+          in: query
+          schema:
+            type: string
+            default: en
+      responses:
+        '200':
+          description: Lesson details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Lesson'
+        '404':
+          description: Lesson not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # ==================
+  # AUTH ENDPOINTS
+  # ==================
+  /auth/register:
+    post:
+      tags:
+        - Auth
+      summary: Register a new user
+      description: Optional user registration for cloud sync
+      operationId: register
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '409':
+          description: Email already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/login:
+    post:
+      tags:
+        - Auth
+      summary: Login user
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/me:
+    get:
+      tags:
+        - Auth
+      summary: Get current user profile
+      operationId: getCurrentUser
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # ==================
+  # LENDERS ENDPOINTS (Phase 3)
+  # ==================
+  /lenders:
+    get:
+      tags:
+        - Lenders
+      summary: Get list of lenders
+      description: |
+        Lender database with reviews.
+        PRD Reference: Phase 3
+      operationId: getLenders
+      parameters:
+        - name: country
+          in: query
+          schema:
+            type: string
+          description: Filter by country code (e.g., KE, NG, IN)
+        - name: minRating
+          in: query
+          schema:
+            type: number
+            minimum: 1
+            maximum: 5
+      responses:
+        '200':
+          description: List of lenders
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LendersResponse'
+
+  /lenders/{id}:
+    get:
+      tags:
+        - Lenders
+      summary: Get lender details
+      operationId: getLenderById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Lender details with reviews
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Lender'
+        '404':
+          description: Lender not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # ==================
+  # SYNC ENDPOINT
+  # ==================
+  /sync:
+    post:
+      tags:
+        - Loans
+        - Savings
+      summary: Sync offline data
+      description: |
+        Bulk sync endpoint for offline-first functionality.
+        Accepts locally created/updated records and returns server state.
+        PRD Reference: Section 3.4 - Background sync
+      operationId: syncData
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SyncRequest'
+      responses:
+        '200':
+          description: Sync successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncResponse'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    # ==================
+    # LOAN SCHEMAS
+    # ==================
+    LoanCalculationRequest:
+      type: object
+      required:
+        - amount
+        - interestRate
+        - interestType
+        - termLength
+        - termUnit
+      properties:
+        amount:
+          type: number
+          minimum: 1
+          description: Loan principal amount
+          example: 1000
+        interestRate:
+          type: number
+          minimum: 0
+          maximum: 500
+          description: Annual interest rate as percentage
+          example: 12
+        interestType:
+          type: string
+          enum: [flat, reducing, compound]
+          description: Type of interest calculation
+          example: reducing
+        termLength:
+          type: integer
+          minimum: 1
+          description: Loan term length
+          example: 12
+        termUnit:
+          type: string
+          enum: [weeks, months, years]
+          description: Unit for term length
+          example: months
+        fees:
+          type: number
+          minimum: 0
+          default: 0
+          description: Additional fees
+          example: 50
+        currency:
+          type: string
+          default: USD
+          enum: [USD, KES, NGN, INR, PHP]
+          description: Currency code
+          example: USD
+
+    LoanCalculationResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            monthlyPayment:
+              type: number
+              description: Monthly payment amount
+              example: 88.85
+            totalInterest:
+              type: number
+              description: Total interest over loan term
+              example: 66.19
+            totalCost:
+              type: number
+              description: Total amount to repay (principal + interest + fees)
+              example: 1116.19
+            effectiveAPR:
+              type: number
+              description: Effective annual percentage rate
+              example: 13.24
+            interestType:
+              type: string
+              enum: [flat, reducing, compound]
+            input:
+              $ref: '#/components/schemas/LoanCalculationRequest'
+        warning:
+          type: object
+          nullable: true
+          properties:
+            isPredatory:
+              type: boolean
+              description: True if APR > 50%
+            severity:
+              type: string
+              enum: [warning, critical]
+            message:
+              type: string
+
+    LoanRecord:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        amount:
+          type: number
+        interestRate:
+          type: number
+        interestType:
+          type: string
+          enum: [flat, reducing, compound]
+        termLength:
+          type: integer
+        termUnit:
+          type: string
+          enum: [weeks, months, years]
+        fees:
+          type: number
+        currency:
+          type: string
+        results:
+          type: object
+          properties:
+            monthlyPayment:
+              type: number
+            totalInterest:
+              type: number
+            totalCost:
+              type: number
+            effectiveAPR:
+              type: number
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    SaveLoanRequest:
+      allOf:
+        - $ref: '#/components/schemas/LoanCalculationRequest'
+        - type: object
+          properties:
+            localId:
+              type: string
+              description: Client-side ID for offline sync
+
+    LoanHistoryResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/LoanRecord'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    # ==================
+    # SAVINGS SCHEMAS
+    # ==================
+    SavingsGoal:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: Emergency Fund
+        targetAmount:
+          type: number
+          example: 5000
+        currentAmount:
+          type: number
+          example: 1250
+        currency:
+          type: string
+          example: USD
+        targetDate:
+          type: string
+          format: date-time
+          nullable: true
+        transactions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Transaction'
+        createdAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    Transaction:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        amount:
+          type: number
+          description: Positive for deposit, negative for withdrawal
+          example: 100
+        type:
+          type: string
+          enum: [deposit, withdrawal]
+        note:
+          type: string
+          nullable: true
+        date:
+          type: string
+          format: date-time
+
+    CreateSavingsGoalRequest:
+      type: object
+      required:
+        - name
+        - targetAmount
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        targetAmount:
+          type: number
+          minimum: 1
+        currency:
+          type: string
+          default: USD
+        targetDate:
+          type: string
+          format: date-time
+          nullable: true
+        localId:
+          type: string
+          description: Client-side ID for offline sync
+
+    UpdateSavingsGoalRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        targetAmount:
+          type: number
+        targetDate:
+          type: string
+          format: date-time
+          nullable: true
+
+    AddTransactionRequest:
+      type: object
+      required:
+        - amount
+      properties:
+        amount:
+          type: number
+          description: Positive for deposit, negative for withdrawal
+        note:
+          type: string
+          maxLength: 200
+        date:
+          type: string
+          format: date-time
+          description: Defaults to current time if not provided
+        localId:
+          type: string
+
+    SavingsGoalsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/SavingsGoal'
+
+    # ==================
+    # LESSON SCHEMAS
+    # ==================
+    Lesson:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+          example: Understanding Interest Rates
+        emoji:
+          type: string
+          example: "📈"
+        summary:
+          type: string
+        content:
+          type: string
+          description: Full lesson content in markdown
+        language:
+          type: string
+          example: en
+        order:
+          type: integer
+          description: Display order
+
+    LessonsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Lesson'
+
+    # ==================
+    # AUTH SCHEMAS
+    # ==================
+    RegisterRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+        name:
+          type: string
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+
+    AuthResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            user:
+              $ref: '#/components/schemas/User'
+            token:
+              type: string
+              description: JWT token
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+
+    # ==================
+    # LENDER SCHEMAS
+    # ==================
+    Lender:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: Community Microfinance
+        country:
+          type: string
+          example: KE
+        averageAPR:
+          type: number
+          example: 24.5
+        rating:
+          type: number
+          minimum: 1
+          maximum: 5
+          example: 4.2
+        reviewCount:
+          type: integer
+          example: 156
+        website:
+          type: string
+          format: uri
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        description:
+          type: string
+        reviews:
+          type: array
+          items:
+            $ref: '#/components/schemas/Review'
+
+    Review:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        comment:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    LendersResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Lender'
+
+    # ==================
+    # SYNC SCHEMAS
+    # ==================
+    SyncRequest:
+      type: object
+      properties:
+        lastSyncAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: Timestamp of last successful sync
+        loans:
+          type: array
+          items:
+            $ref: '#/components/schemas/SaveLoanRequest'
+        savingsGoals:
+          type: array
+          items:
+            $ref: '#/components/schemas/CreateSavingsGoalRequest'
+        transactions:
+          type: array
+          items:
+            allOf:
+              - $ref: '#/components/schemas/AddTransactionRequest'
+              - type: object
+                properties:
+                  goalLocalId:
+                    type: string
+
+    SyncResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            loans:
+              type: array
+              items:
+                $ref: '#/components/schemas/LoanRecord'
+            savingsGoals:
+              type: array
+              items:
+                $ref: '#/components/schemas/SavingsGoal'
+            syncedAt:
+              type: string
+              format: date-time
+            idMappings:
+              type: object
+              description: Maps local IDs to server IDs
+              additionalProperties:
+                type: string
+
+    # ==================
+    # COMMON SCHEMAS
+    # ==================
+    Error:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: VALIDATION_ERROR
+            message:
+              type: string
+              example: Invalid input data
+            details:
+              type: object
+              additionalProperties: true
+
+    Pagination:
+      type: object
+      properties:
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+        hasMore:
+          type: boolean

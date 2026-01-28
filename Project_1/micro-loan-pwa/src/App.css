@@ -1,0 +1,11 @@
+/**
+ * App-specific styles
+ * PRD Reference: Section 4 - Technical Architecture
+ * 
+ * Most styling handled by Tailwind CSS.
+ * This file for any component-specific overrides.
+ */
+
+#root {
+  min-height: 100vh;
+}
