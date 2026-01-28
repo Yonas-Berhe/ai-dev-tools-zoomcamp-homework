@@ -25,7 +25,6 @@ services:
   - type: web
     name: micro-loan-pwa
     runtime: static
-    plan: free
     rootDir: Project_1/micro-loan-pwa
     buildCommand: npm install && npm run build
     staticPublishPath: dist
