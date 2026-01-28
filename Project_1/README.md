@@ -2,6 +2,10 @@
 
 A Progressive Web Application for loan calculations and savings tracking, designed to empower users in emerging markets with financial literacy tools.
 
+## 🌐 Live Demo
+
+**Try it now:** [https://micro-loan-pwa.onrender.com/](https://micro-loan-pwa.onrender.com/)
+
 ---
 
 ## 🎯 Mission & Purpose
